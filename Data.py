@@ -11,4 +11,4 @@ class Data:
 
     def __str__(self):
         return str(self.creatorID) + str(self.objectID) + str(self.objectType) + \
-               str(self.pfand) + str(self.status) + str(self.prevhash)
+               str(self.pfand) + str(self.status)
