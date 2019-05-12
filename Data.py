@@ -1,10 +1,12 @@
+from uuid import uuid4
+
 # The Data ~~~ Normal!? ~~~
 class Data:
-    def __init__(self, creatorID, objectID, objectType, pfand, status, prevhash):
+    def __init__(self, creatorID, objectType, status, prevhash):
         self.creatorID = creatorID
-        self.objectID = objectID
+        self.objectID = uuid.uuid4()
         self.objectType = objectType
-        self.pfand = pfand
+        self.pfand = 12
         self.status = status
         self.prevhash = prevhash
 
