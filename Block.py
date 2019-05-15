@@ -11,4 +11,3 @@ class Block:
 
     def set_next(self, next):
         self.next = next
-

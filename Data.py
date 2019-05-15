@@ -6,8 +6,9 @@ class Data:
         self.objectType = objectType
         self.pfand = pfand
         self.status = status
+        self.date = date
         self.prevhash = prevhash
 
     def __str__(self):
         return str(self.creatorID) + str(self.objectID) + str(self.objectType) + \
-               str(self.pfand) + str(self.status) + str(self.prevhash)
+               str(self.pfand) + str(self.status) + str(self.date) + str(self.prevhash)
