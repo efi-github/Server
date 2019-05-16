@@ -15,9 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-import server.views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('send_qr/<slug:qr>/', server.views.respond_http),
+    path("block/", include("blockchain.urls")),
 ]
