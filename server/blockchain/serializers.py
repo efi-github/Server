@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Block
 
 
-class CardTypeSerializer(serializers.ModelSerializer):
+class BlockSerializer(serializers.ModelSerializer):
     class Meta:
         model = Block
-        fields = ("created",)
+        fields = ("creatorID", "objectID", "objectType", "pfand", "status", "prevhash",)

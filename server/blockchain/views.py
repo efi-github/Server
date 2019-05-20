@@ -4,18 +4,24 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Block
+from .serializers import BlockSerializer
 
 class BlockView(APIView):
+    serializer_class = BlockSerializer
+
     def get_object(self, uuid):
         try:
-            return Block.objects.get(pk=uuid)
+            return Block.objects.get(objectID=uuid)
         except Block.DoesNotExist:
             raise Http404
 
     def get(self, request, uuid):
-        # TODO: Mehr als eine Testimplementierung draus machen…
+        if not uuid:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         block = self.get_object(uuid)
-        return Response(Block, status=status.HTTP_200_OK)
+        serializer = BlockSerializer(block, many=False)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
         body = json.loads(request.body)
@@ -35,5 +41,11 @@ class BlockView(APIView):
         return Response(status=status.HTTP_200_OK)
 
     def put(self, request):
-        # TODO
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        body = json.loads(request.body)
+        if (not "recyclerID" in body
+            or not "objectID" in body):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        # Alles gut, verschrotten
+        Block.objects.filter(objectID=body["objectID"]).update(status="verschrottet")
+        return Response(status=status.HTTP_200_OK)
