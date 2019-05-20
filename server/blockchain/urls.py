@@ -6,5 +6,5 @@ router = routers.DefaultRouter()
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("<slug:uuid>/", views.BlockView.as_view()),
+    path("block/", views.BlockView.as_view()),
 ]

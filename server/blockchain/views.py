@@ -1,23 +1,4 @@
-from django.shortcuts import render
-from django.http import HttpResponse
-from .models import Block
-
-# Create your views here.
-# def addBlock(request):
-#    if request.POST['creatorID'] and request.POST['objectID'] and request.POST['objectType'] and request.POST['pfand']:
-#        block_instance = Block.objects.create(
-#                        creatorID = request.POST['creatorID'],
-#                        objectID = request.POST['objectID'],
-#                        objectType = request.POST['objectType'],
-#                        pfand = request.POST['pfand'],
-#                        status = "In Benutzung",
-#                        prevhash = getPreviousHash())
-#        return HttpResponse("done", status=200)
-#    else:
-#        return HttpResponse("Missing Arguments", status=400)
-
-#def getPreviousHash():
-#    pass
+import json
 from django.http import Http404
 from rest_framework import status
 from rest_framework.views import APIView
@@ -37,8 +18,21 @@ class BlockView(APIView):
         return Response(Block, status=status.HTTP_200_OK)
 
     def post(self, request):
-        # TODO
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        body = json.loads(request.body)
+        if (not "creatorID" in body
+            or not "objectID" in body
+            or not "objectType" in body
+            or not "pfand" in body):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        Block.objects.create(
+                        creatorID = body["creatorID"],
+                        objectID = body['objectID'],
+                        objectType = body['objectType'],
+                        pfand = body['pfand'],
+                        status = "In Benutzung",
+                        prevhash = "foo")
+        return Response(status=status.HTTP_200_OK)
 
     def put(self, request):
         # TODO
