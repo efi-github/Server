@@ -19,5 +19,7 @@ import server.views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('postResponseTest/', include('')),
     path('send_qr/<slug:qr>/', server.views.respond_http),
+    path('addBlock/', blockchain.views.addBlock),
 ]
