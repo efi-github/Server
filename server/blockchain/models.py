@@ -7,3 +7,5 @@ class Block(models.Model):
     pfand = models.CharField(max_length=100)
     status = models.CharField(max_length=100)
     prevhash = models.CharField(max_length=100)
+    prevID = models.CharField(max_length=100, default="")
+    sighash = models.CharField(max_length=64, default="")
