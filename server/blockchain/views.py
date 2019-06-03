@@ -59,8 +59,8 @@ class BlockView(APIView):
         #Wenn Gerät bereits verschrottet ist gib einen Error aus.
         if "Verschrottet" in Block.objects.filter(objectID=body["objectID"]).status:
             print("[Error] Dieses Gerät wurde bereits verschrottet.\n\t"+Block.objects.filter(objectID=body["objectID"]).status+"\n\tRequest: "+request.body.recyclerID)
-            return Response(status=status.HTTP_400_BAD_REQUEST) 
-               
+            return Response(status=status.HTTP_403_FORBIDDEN) 
+
         # Alles gut, verschrotten
         else:
             Block.objects.filter(objectID=body["objectID"]).update(status="Verschrottet: "+body.recyclerID)
