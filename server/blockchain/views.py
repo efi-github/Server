@@ -1,6 +1,7 @@
 import json
 from uuid import uuid4
 from django.http import Http404
+from django.db import models
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -32,7 +33,12 @@ class BlockView(APIView):
             or not "objectType" in body
             or not "pfand" in body):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        new_objectID = uuid4()
+            
+        while True:
+            new_objectID = uuid4()
+            if models.objects.filter(body_text__search=new_objectID).count() == 0:
+                break
+                
         Block.objects.create(
                         creatorID = body["creatorID"],
                         objectID = new_objectID,
@@ -49,7 +55,13 @@ class BlockView(APIView):
         if (not "recyclerID" in body
             or not "objectID" in body):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
+        
+        #Wenn Gerät bereits verschrottet ist gib einen Error aus.
+        if "Verschrottet" in Block.objects.filter(objectID=body["objectID"]).status:
+            print("[Error] Dieses Gerät wurde bereits verschrottet.\n\t"+Block.objects.filter(objectID=body["objectID"]).status+"\n\tRequest: "+request.body.recyclerID)
+            return Response(status=status.HTTP_400_BAD_REQUEST) 
+               
         # Alles gut, verschrotten
-        Block.objects.filter(objectID=body["objectID"]).update(status="verschrottet")
-        return Response(status=status.HTTP_200_OK)
+        else:
+            Block.objects.filter(objectID=body["objectID"]).update(status="Verschrottet: "+body.recyclerID)
+            return Response(status=status.HTTP_200_OK)
