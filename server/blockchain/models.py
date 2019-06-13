@@ -7,3 +7,8 @@ class Block(models.Model):
     pfand = models.CharField(max_length=100)
     status = models.CharField(max_length=100)
     prevhash = models.CharField(max_length=100)
+
+class Key(models.Model):
+    creatorID = models.CharField(max_length=100)
+    key = models.CharField(max_length=500)
+    type = models.CharField(max_length = 100)
