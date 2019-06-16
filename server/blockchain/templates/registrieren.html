@@ -1,7 +1,7 @@
 <html>
 
 <head>
-    <title>Guthaben abfragen</title>
+    <title>Registrieren</title>
     <style>
         body {
             font-size: 150%;
@@ -23,13 +23,13 @@
         }
 
         .in {
-            width: 80%;
-            height: 80px;
+            width: 100%;
+            height: 40px;
             background-color: #EEE;
             border-style: none;
-            font-size: 150%;
+            font-size: 100%;
             font-family: 'Segoe UI Light';
-            margin-top: 100px;
+            margin-top: 30px;
             padding: 20px;
             text-align: center;
         }
@@ -50,9 +50,20 @@
 </head>
 
 <body>
-    <h1>Pfandabfrage</h1>
-    <form action="/website">
-        Code: <input class="in" type="text" name="uuid">
+    <h1 style="text-align: center;">Gerät Registrieren</h1>
+    <form action="/registrierungWebsite" style="padding-left:50px;" method="POST">
+        <table style="width:100%">
+            <tr>
+              <th>Gerätetyp:</th>
+              <th>Pfand: </th> 
+              <th>Private Key: </th>
+            </tr>
+            <tr>
+              <td><input class="in" type="text" name="type"></td>
+              <td><input class="in" type="text" name="pfand"></td> 
+              <td><input class="in" type="text" name="key"></td>
+            </tr>
+          </table>
         <br>
         <input class="button" type="submit" value="Submit">
     </form>

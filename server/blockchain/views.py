@@ -1,5 +1,4 @@
-import json
-import rsa
+import json, rsa, csv
 from uuid import uuid4
 from django.http import Http404, HttpResponse, HttpRequest
 from django.db import models
@@ -83,9 +82,10 @@ class BlockView(APIView):
                         prevhash = body['prevhash'])
         return Response(status=status.HTTP_200_OK)
 
-#Klasse für die Website
-class Website(APIView):
-    serializer_class = BlockSerializer 
+class PfandWebsite(APIView):
+    #Wenn man http://127.0.0.1:8000/pfandWebsite/ aufruft kommt man auf
+    #die Pfandabfrage Seite. Zusätzlich kann man mit ?uuid=<UUID> im Link
+    #eine Direktabfrage machen.
     def get(self, request):
         if request.GET.get("uuid","0") == "0" or  request.GET.get("uuid","0") == "":
             return render(request,"index.html",{})
@@ -94,5 +94,64 @@ class Website(APIView):
         except Block.DoesNotExist:
             return render(request,"index.html",{'Object':{'Objekt nicht gefunden':request.GET.get("uuid","0")}})
         print("Rendered out Info")
-        return render(request,"index.html",{'Object':{'Hersteller': Object.creatorID,'Typ': Object.objectType,'Pfand': Object.pfand,'Status':Object.status}})
+        return render(request,"index.html",{
+            'Object':{
+                'Hersteller': Object.creatorID,
+                'Typ': Object.objectType,
+                'Pfand': Object.pfand+"€",
+                'Status':'Pfand gültig' if Object.status=='In Benutzung' else 'Pfand eingelößt'
+                }})
         
+class RegistrierungWebsite(APIView):
+    #Wenn man http://127.0.0.1:8000/registrierungWebsite/ aufruft kommt man auf
+    #die Website zum registrieren neuer Objekte. Man muss hierbei sein
+    #Produkt, Private Key und den Pfand angeben.
+    def get(self, request):
+        return render(request,"registrieren.html",{})
+
+    def post(self, request):
+        if request.PUT.get("type") != "" and int(request.PUT.get("pfand")) >= 0 and request.PUT.get("key") != "":
+            return render(request,"registrieren.html",{})
+        try:
+            Object = Block.objects.get(objectID=request.GET.get("uuid","0"))
+        except Block.DoesNotExist:
+            return render(request,"registrieren.html",{'Object':{'Objekt nicht gefunden':request.GET.get("uuid","0")}})
+        print("Rendered out Registration")
+        return render(request,"registrieren.html",{
+            'Object':{
+                'Hersteller': Object.creatorID,
+                'Typ': Object.objectType,
+                'Pfand': Object.pfand+"€",
+                'Status':'Pfand gültig' if Object.status=='In Benutzung' else 'Pfand eingelößt'
+                }})
+
+class DownloadBlockchain(APIView):
+    #Wenn man http://127.0.0.1:8000/download/ aufruft läd man sich die komplette
+    #Blockchain als CSV File runter
+    def get(self, request):
+        import csv
+        from django.utils.encoding import smart_str
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=blockchain.csv'
+        writer = csv.writer(response, csv.excel)
+        response.write(u'\ufeff'.encode('utf8')) # BOM (optional...Excel needs it to open UTF-8 file properly)
+        writer.writerow([
+            smart_str(u"id"),
+            smart_str(u"creatorID"),
+            smart_str(u"objectID"),
+            smart_str(u"objectType"),
+            smart_str(u"pfand"),
+            smart_str(u"status"),
+            smart_str(u"prevhash"),
+        ])
+        for obj in Block.objects.all():
+            writer.writerow([
+                smart_str(obj.id),
+                smart_str(obj.creatorID),
+                smart_str(obj.objectID),
+                smart_str(obj.objectType),
+                smart_str(obj.pfand),
+                smart_str(obj.status),
+                smart_str(obj.prevhash),
+            ])
+        return response
