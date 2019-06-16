@@ -1,7 +1,9 @@
 import json
 from uuid import uuid4
-from django.http import Http404
+from django.http import Http404, HttpResponse, HttpRequest
 from django.db import models
+from django.template import Context, loader
+from django.shortcuts import render
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -65,3 +67,16 @@ class BlockView(APIView):
         else:
             Block.objects.filter(objectID=body["objectID"]).update(status="Verschrottet: "+body.recyclerID)
             return Response(status=status.HTTP_200_OK)
+
+class Website(APIView):
+    serializer_class = BlockSerializer 
+
+    def get(self, request):
+        if request.GET.get("uuid","0") == "0" or  request.GET.get("uuid","0") == "":
+            return render(request,"index.html",{})
+        try:
+            Object = Block.objects.get(objectID=request.GET.get("uuid","0"))
+        except Block.DoesNotExist:
+            return render(request,"index.html",{'Object':{'Objekt nicht gefunden':request.GET.get("uuid","0")}})
+        print("Rendered out Info")
+        return render(request,"index.html",{'Object':{'Hersteller': Object.creatorID,'Typ': Object.objectType,'Pfand': Object.pfand,'Status':Object.status}})
