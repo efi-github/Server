@@ -11,12 +11,8 @@ from .serializers import BlockSerializer, KeySerializer
 class BlockView(APIView):
     serializer_class = BlockSerializer
 
-    def get_object(self, uuid):
-        try:
-            return Block.objects.get(objectID=uuid)
-        except Block.DoesNotExist:
-            raise Http404
-
+    #Validiert einen Block (Server)
+    #Checkt mithilfe des Public Keys ob der Block richtig signiert wurde.
     def check(self, creator, prevhash):
         pubkey= rsa.PublicKey(int(creator.key), 65537)
         prev_block= BlockSerializer(Block.objects.latest("id"), many=False)
@@ -25,15 +21,22 @@ class BlockView(APIView):
         return is_valid
 
 
+    #Ließt ein Objekt aus (Jeder)
+    #Get holt sich ein bestimmtes Objekt mit der gegebenen UUID.
+    #Wenn die UUID==0 ist dann wird das letzte Objekt ausgelesen.
     def get(self, request, uuid):
         if uuid == "0":
             block = Block.objects.latest("id")
         else:
-            block = self.get_object(uuid)
+            try:
+                block = Block.objects.get(objectID=uuid)
+            except Block.DoesNotExist:
+                raise Http404
         serializer = BlockSerializer(block, many=False)
         return Response(str(serializer.data).encode('utf8'), status=status.HTTP_200_OK)
 
-
+    #Erstellt ein neues Objekt (Hersteller)
+    #Post erstellt einen neuen Block mit einem neuen Objekt.
     def post(self, request):
         body = json.loads(request.body)
         if (not "creatorID" in body
@@ -55,6 +58,9 @@ class BlockView(APIView):
                         prevhash = body['prevhash'])
         return Response(new_id, status=status.HTTP_200_OK)
 
+    #Verschrottet das Objekt (Verschrotter)
+    #Put erstellt einen neuen Block in dem das Objekt 
+    #als verschrottet markiert und der Pfand auf 0 gesetzt wird.
     def put(self, request):
         body = json.loads(request.body)
         if (not "recyclerID" in body
