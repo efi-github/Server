@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Block, Key
 from .serializers import BlockSerializer, KeySerializer
+from django.contrib.auth import authenticate, login, logout
 
 class BlockView(APIView):
     serializer_class = BlockSerializer
@@ -110,7 +111,19 @@ class RegistrierungWebsite(APIView):
         return render(request,"registrieren.html",{})
 
     def post(self, request):
-        if request.PUT.get("type") != "" and int(request.PUT.get("pfand")) >= 0 and request.PUT.get("key") != "":
+        #if not request.user.is_authenticated:
+        #    return HttpResponse('Fail')
+        if request.POST.get("type") != "" and int(request.POST.get("pfand")) >= 0 and request.POST.get("key") != "":
+            #prevhash = bytes.fromhex(body["prevhash"])
+            new_id = uuid4()
+            Block.objects.create(
+                        #creatorID = body["creatorID"],
+                        objectID = new_id,
+                        objectType = request.POST.get("type"),
+                        pfand = request.POST.get("pfand"),
+                        status = "In Benutzung",
+                        #prevhash = body['prevhash']
+                        )
             return render(request,"registrieren.html",{})
         try:
             Object = Block.objects.get(objectID=request.GET.get("uuid","0"))
@@ -124,6 +137,28 @@ class RegistrierungWebsite(APIView):
                 'Pfand': Object.pfand+"€",
                 'Status':'Pfand gültig' if Object.status=='In Benutzung' else 'Pfand eingelößt'
                 }})
+
+
+class Anmeldung(APIView):
+    #Wenn man http://127.0.0.1:8000/registrierungWebsite/ aufruft kommt man auf
+    #die Website zum anmelden von Benutzern. Man muss hierbei sein
+    #username, password angeben.
+    def get(self, request):
+        return render(request,"anmelden.html",{})
+
+    def post(self, request):
+        if request.POST.get("username") == "" or request.POST.get("password") =="":
+            return render(request,"anmelden.html",{"nologin":True})
+        else:
+            user = authenticate(username=request.POST.get("username"), password=request.POST.get("password"))
+            login(request, user)
+            return HttpResponse(user.username)
+           
+def abmeldung(request):
+    logout(request)
+    return HttpResponse("abgemeldet")
+
+
 
 class DownloadBlockchain(APIView):
     #Wenn man http://127.0.0.1:8000/download/ aufruft läd man sich die komplette

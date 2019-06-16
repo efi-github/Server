@@ -1,7 +1,7 @@
 <html>
 
 <head>
-    <title>Registrieren</title>
+    <title>Anmeldung</title>
     <style>
         body {
             font-size: 150%;
@@ -50,18 +50,19 @@
 </head>
 
 <body>
-    <h1 style="text-align: center;">Gerät Registrieren</h1>
-    <form action="/registrierungWebsite/" style="padding-left:50px;" method="POST">
+    <h1 style="text-align: center;">Anmeldung</h1>
+    <form action="/anmeldung/" style="padding-left:50px;" method="POST">
+        {% if nologin %}
+        <h2>Es ist etwas schief gelaufen</h2>
+        {% endif %}
         <table style="width:100%">
             <tr>
-              <th>Gerätetyp:</th>
-              <th>Pfand: </th> 
-              <th>Private Key: </th>
+              <th>Benutzername:</th>
+              <th>Passwort: </th> 
             </tr>
             <tr>
-              <td><input class="in" type="text" name="type"></td>
-              <td><input class="in" type="text" name="pfand"></td> 
-              <td><input class="in" type="text" name="key"></td>
+              <td><input class="in" type="text" name="username"></td>
+              <td><input class="in" type="password" name="password"></td> 
             </tr>
           </table>
         <br>

@@ -1,4 +1,5 @@
 from django.contrib import admin
-from .models import Key
+from .models import *
 # Register your models here.
-admin.register(Key)
+admin.site.register(Key)
+admin.site.register(Block)
