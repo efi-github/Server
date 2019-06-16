@@ -70,29 +70,6 @@ class BlockView(APIView):
             or not "objectID" in body
             or not "prevhash" in body):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-        #Wenn Gerät bereits verschrottet ist gib einen Error aus.
-        if "Verschrottet" in Block.objects.filter(objectID=body["objectID"]).status:
-            print("[Error] Dieses Gerät wurde bereits verschrottet.\n\t"+Block.objects.filter(objectID=body["objectID"]).status+"\n\tRequest: "+request.body.recyclerID)
-            return Response(status=status.HTTP_403_FORBIDDEN) 
-
-        # Alles gut, verschrotten
-        else:
-            Block.objects.filter(objectID=body["objectID"]).update(status="Verschrottet: "+body.recyclerID)
-            return Response(status=status.HTTP_200_OK)
-
-class Website(APIView):
-    serializer_class = BlockSerializer 
-
-    def get(self, request):
-        if request.GET.get("uuid","0") == "0" or  request.GET.get("uuid","0") == "":
-            return render(request,"index.html",{})
-        try:
-            Object = Block.objects.get(objectID=request.GET.get("uuid","0"))
-        except Block.DoesNotExist:
-            return render(request,"index.html",{'Object':{'Objekt nicht gefunden':request.GET.get("uuid","0")}})
-        print("Rendered out Info")
-        return render(request,"index.html",{'Object':{'Hersteller': Object.creatorID,'Typ': Object.objectType,'Pfand': Object.pfand,'Status':Object.status}})
         creator = Key.objects.get(creatorID=creatorID)
         if not (check(body["recyclerID"], body["prevhash"]) and (creator.creatorID == "Recycler")):
             return Response(status=status.HTTP_409_CONFLICT)
@@ -105,3 +82,17 @@ class Website(APIView):
                         status = "Verschrottet",
                         prevhash = body['prevhash'])
         return Response(status=status.HTTP_200_OK)
+
+#Klasse für die Website
+class Website(APIView):
+    serializer_class = BlockSerializer 
+    def get(self, request):
+        if request.GET.get("uuid","0") == "0" or  request.GET.get("uuid","0") == "":
+            return render(request,"index.html",{})
+        try:
+            Object = Block.objects.get(objectID=request.GET.get("uuid","0"))
+        except Block.DoesNotExist:
+            return render(request,"index.html",{'Object':{'Objekt nicht gefunden':request.GET.get("uuid","0")}})
+        print("Rendered out Info")
+        return render(request,"index.html",{'Object':{'Hersteller': Object.creatorID,'Typ': Object.objectType,'Pfand': Object.pfand,'Status':Object.status}})
+        
