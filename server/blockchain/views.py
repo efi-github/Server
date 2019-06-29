@@ -111,8 +111,6 @@ class RegistrierungWebsite(APIView):
         return render(request,"registrieren.html",{})
 
     def post(self, request):
-        #if not request.user.is_authenticated:
-        #    return HttpResponse('Fail')
         if request.POST.get("type") != "" and int(request.POST.get("pfand")) >= 0 and request.POST.get("key") != "":
             #prevhash = bytes.fromhex(body["prevhash"])
             new_id = uuid4()
@@ -139,25 +137,14 @@ class RegistrierungWebsite(APIView):
                 }})
 
 
-class Anmeldung(APIView):
-    #Wenn man http://127.0.0.1:8000/registrierungWebsite/ aufruft kommt man auf
-    #die Website zum anmelden von Benutzern. Man muss hierbei sein
-    #username, password angeben.
-    def get(self, request):
-        return render(request,"anmelden.html",{})
+def getInfo(request):
+    return render(request, "getInfo.html")
 
-    def post(self, request):
-        if request.POST.get("username") == "" or request.POST.get("password") =="":
-            return render(request,"anmelden.html",{"nologin":True})
-        else:
-            user = authenticate(username=request.POST.get("username"), password=request.POST.get("password"))
-            login(request, user)
-            return HttpResponse(user.username)
-           
-def abmeldung(request):
-    logout(request)
-    return HttpResponse("abgemeldet")
-
+def showInfo(request):
+    #Object = Block.objects.get(objectID=request.GET.get("uuid","0"))
+    id=(request.GET.get("GeraeteId"))
+    block=Block.objects.get(objectID=id)
+    return render(request, "showInfo.html",{'id':id,'block':block})
 
 
 class DownloadBlockchain(APIView):

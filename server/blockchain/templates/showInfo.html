@@ -1,7 +1,9 @@
+
+
 <html>
 
 <head>
-    <title>Anmeldung</title>
+    <title>Registrieren</title>
     <style>
         body {
             font-size: 150%;
@@ -50,24 +52,19 @@
 </head>
 
 <body>
-    <h1 style="text-align: center;">Anmeldung</h1>
-    <form action="/anmeldung/" style="padding-left:50px;" method="POST">
-        {% if nologin %}
-        <h2>Es ist etwas schief gelaufen</h2>
+    <h1 style="text-align: center;">Gerätestatus</h1>
+
+    {% if block.status == "Verschrottet" %}
+        <p>!!!!!! Das Gerät wurde schon verschrottet !!!!!!</p>
         {% endif %}
-        <table style="width:100%">
-            <tr>
-              <th>Benutzername:</th>
-              <th>Passwort: </th> 
-            </tr>
-            <tr>
-              <td><input class="in" type="text" name="username"></td>
-              <td><input class="in" type="password" name="password"></td> 
-            </tr>
-          </table>
-        <br>
-        <input class="button" type="submit" value="Submit">
-    </form>
+    <p>
+        <ul>
+            <li>Geräte-ID: {{id}}</li>
+            <li>Status: {{block.status}}</li>
+            <li>Pfand: {{block.pfand}} €</li>
+
+        </ul>
+    </p>
 </body>
 
 </html>

@@ -11,7 +11,8 @@ urlpatterns = [
     path("block/<slug:uuid>/", views.BlockView.as_view()),
     path("pfandWebsite/", views.PfandWebsite.as_view()),
     path("registrierungWebsite/", views.RegistrierungWebsite.as_view()),
-    path("anmeldung/", views.Anmeldung.as_view()),
-    path("abmeldung/", views.abmeldung),
+    
     path("download/", views.DownloadBlockchain.as_view()),
+    path("getInfo/", views.getInfo, name="getInfo"),
+    path("showInfo/", views.showInfo, name="showInfo")
 ]

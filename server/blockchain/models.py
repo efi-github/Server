@@ -9,6 +9,9 @@ class Block(models.Model):
     status = models.CharField(max_length=100)
     prevhash = models.CharField(max_length=100)
 
+    def __str__(self):
+        return self.objectType
+
 #Die Key Datenbank die die Hersteller und Verschrotter Keys speichert
 class Key(models.Model):
     creatorID = models.CharField(max_length=100)
