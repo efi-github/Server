@@ -1,0 +1,64 @@
+<html>
+
+<head>
+    <title>Registrieren</title>
+    <style>
+        body {
+            font-size: 150%;
+            font-family: 'Segoe UI Black';
+            text-align: center;
+            background-color: #2c2f33;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .button {
+            width: 50%;
+            height: 80px;
+            background-color: #CCC;
+            border-style: none;
+            font-size: 150%;
+            font-family: 'Segoe UI Light';
+            margin-top: 100px;
+        }
+
+        .in {
+            width: 100%;
+            height: 40px;
+            background-color: #EEE;
+            border-style: none;
+            font-size: 100%;
+            font-family: 'Segoe UI Light';
+            margin-top: 30px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        a {
+            color:rgb(253, 253, 253)
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            margin: 20px;
+        }
+
+        p {
+            margin: 15px 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 style="text-align: center;">Status eines Gerätes abfragen</h1>
+    <ul>
+        <li><a href="{% url 'getInfo' %}">Geräte-Status abfragen durch Eingabe einer Geräte-ID </a></li>
+        <li><a href="{% url 'download' %}">Download der kompletten BlockChain</a></li>
+    </ul>
+</body>
+
+</html>

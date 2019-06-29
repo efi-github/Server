@@ -146,6 +146,8 @@ def showInfo(request):
     block=Block.objects.get(objectID=id)
     return render(request, "showInfo.html",{'id':id,'block':block})
 
+def main(request):
+    return render(request,"main.html")
 
 class DownloadBlockchain(APIView):
     #Wenn man http://127.0.0.1:8000/download/ aufruft läd man sich die komplette
