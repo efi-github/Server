@@ -70,10 +70,11 @@ class BlockView(APIView):
             or not "objectID" in body
             or not "prevhash" in body):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        creator = Key.objects.get(creatorID=creatorID)
-        if not (check(body["recyclerID"], body["prevhash"]) and (creator.creatorID == "Recycler")):
+        creator = Key.objects.get(creatorID= body["recyclerID"])
+        prevhash = bytes.fromhex(body["prevhash"])
+        if not (creator, prevhash) and (creator.type == "Recycler")):
             return Response(status=status.HTTP_409_CONFLICT)
-        block = Block.objects.get(creatorID=body["recyclerID"])
+        block = Block.objects.get(objectID=body["objectID"])
         Block.objects.create(
                         creatorID = body["recyclerID"],
                         objectID = block.objectID,
