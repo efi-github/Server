@@ -19,14 +19,13 @@ class BlockView(APIView):
     def check(self, creator, prevhash):
         pubkey= rsa.PublicKey(int(creator.key), 65537)
         prev_block= BlockSerializer(Block.objects.latest("id"), many=False)
-        print(prev_block, type(prev_block), prev_block.data, type(prev_block.data))
         is_valid = rsa.verify(str(prev_block.data).encode('utf8'), prevhash, pubkey)
         return is_valid
 
 
-    #Ließt ein Objekt aus (Jeder)
+    #Liest ein Objekt aus (Jeder)
     #Get holt sich ein bestimmtes Objekt mit der gegebenen UUID.
-    #Wenn die UUID==0 ist dann wird das letzte Objekt ausgelesen.
+    #Wenn die UUID==0 ist, dann wird das letzte Objekt ausgelesen.
     def get(self, request, uuid):
         if uuid == "0":
             block = Block.objects.latest("id")

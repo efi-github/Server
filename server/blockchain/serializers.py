@@ -5,7 +5,7 @@ from .models import Block, Key
 class BlockSerializer(serializers.ModelSerializer):
     class Meta:
         model = Block
-        fields = ("creatorID", "objectID", "objectType", "pfand", "status", "prevhash",)
+        fields = ("creatorID", "objectID", "objectType", "pfand", "status", "prevhash","hash")
 
 class KeySerializer(serializers.ModelSerializer):
     class Meta:
