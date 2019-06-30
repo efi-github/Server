@@ -16,11 +16,14 @@ class BlockView(APIView):
 
     #Validiert einen Block (Server)
     #Checkt mithilfe des Public Keys ob der Block richtig signiert wurde.
-    def check(self, creator, prevhash):
+    def check(self, block, creator, hash):
         pubkey= rsa.PublicKey(int(creator.key), 65537)
-        prev_block= BlockSerializer(Block.objects.latest("id"), many=False)
-        is_valid = rsa.verify(str(prev_block.data).encode('utf8'), prevhash, pubkey)
-        return is_valid
+        serializedBlock = BlockSerializer(block, many=False)
+        try:
+            rsa.verify(str(serializedBlock.data).encode('utf8'), hash, pubkey)
+        except:
+            raise Http404
+        return True
 
 
     #Liest ein Objekt aus (Jeder)
@@ -42,45 +45,58 @@ class BlockView(APIView):
     def post(self, request):
         body = json.loads(request.body)
         if (not "creatorID" in body
+            or not "objectID" in body
             or not "objectType" in body
             or not "pfand" in body
-            or not "prevhash" in body):
+            or not "hash" in body):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        creator = Key.objects.get(creatorID=body["creatorID"])
-        prevhash = bytes.fromhex(body["prevhash"])
-        if not (self.check(creator, prevhash) and (creator.type == "Hersteller")):
+        try:
+            creator = Key.objects.get(creatorID=body["creatorID"])
+        except Key.DoesNotExist:
+            raise Http404
+        hash = bytes.fromhex(body["hash"])
+        newBlock = Block(
+            creatorID = body["creatorID"],
+            objectID = new_id,
+            objectType = body['objectType'],
+            pfand = body['pfand'],
+            status = False,
+            prevhash = Block.objects.latest("id").hash,
+            hash = body['hash'])
+        if not ((creator.type == "Hersteller") and self.check(newBlock, creator, hash)):
             return Response(status=status.HTTP_409_CONFLICT)
-        new_id = uuid4()
-        Block.objects.create(
-                        creatorID = body["creatorID"],
-                        objectID = new_id,
-                        objectType = body['objectType'],
-                        pfand = body['pfand'],
-                        status = "In Benutzung",
-                        prevhash = body['prevhash'])
+        newBlock.save()
         return Response(new_id, status=status.HTTP_200_OK)
 
     #Verschrottet das Objekt (Verschrotter)
-    #Put erstellt einen neuen Block in dem das Objekt 
+    #Put erstellt einen neuen Block, in dem das Objekt 
     #als verschrottet markiert und der Pfand auf 0 gesetzt wird.
     def put(self, request):
         body = json.loads(request.body)
         if (not "recyclerID" in body
             or not "objectID" in body
-            or not "prevhash" in body):
+            or not "hash" in body):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        creator = Key.objects.get(creatorID= body["recyclerID"])
-        prevhash = bytes.fromhex(body["prevhash"])
-        if not (creator, prevhash) and (creator.type == "Recycler"):
+        try:
+            creator = Key.objects.get(creatorID= body["recyclerID"])
+        except:
+            raise Http404
+        hash = bytes.fromhex(body["hash"])
+        try:
+            block = Block.objects.get(objectID=body["objectID"])
+        except:
+            raise Http404
+        newBlock = Block(
+            creatorID = body["recyclerID"],
+            objectID = block.objectID,
+            objectType = block.objectType,
+            pfand = '0',
+            status = True,
+            prevhash = Block.objects.latest("id").hash,
+            hash = body['hash'])
+        if not (creator.type == "Recycler" and not block.status and self.check(newBlock, creator, hash) ):
             return Response(status=status.HTTP_409_CONFLICT)
-        block = Block.objects.get(objectID=body["objectID"])
-        Block.objects.create(
-                        creatorID = body["recyclerID"],
-                        objectID = block.objectID,
-                        objectType = block.objectType,
-                        pfand = '0',
-                        status = "Verschrottet",
-                        prevhash = body['prevhash'])
+        newBlock.save()
         return Response(status=status.HTTP_200_OK)
 
 class PfandWebsite(APIView):

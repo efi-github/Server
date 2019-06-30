@@ -7,7 +7,8 @@ class Block(models.Model):
 	objectID = models.CharField(max_length=100)
 	objectType = models.CharField(max_length=100)
 	pfand = models.CharField(max_length=100)
-	status = models.CharField(max_length=100)
+	# False=nicht verschrottet, True=verschrottet
+	status = models.BooleanField()
 	prevhash = models.CharField(max_length=200)
 	hash = models.CharField(max_length=200)
 
