@@ -71,7 +71,7 @@ class BlockView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         creator = Key.objects.get(creatorID= body["recyclerID"])
         prevhash = bytes.fromhex(body["prevhash"])
-        if not (creator, prevhash) and (creator.type == "Recycler")):
+        if not (creator, prevhash) and (creator.type == "Recycler"):
             return Response(status=status.HTTP_409_CONFLICT)
         block = Block.objects.get(objectID=body["objectID"])
         Block.objects.create(
