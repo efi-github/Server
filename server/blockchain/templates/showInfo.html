@@ -54,13 +54,17 @@
 <body>
     <h1 style="text-align: center;">Gerätestatus</h1>
 
-    {% if block.status == "Verschrottet" %}
+    {% if block.status %}
         <p>!!!!!! Das Gerät wurde schon verschrottet !!!!!!</p>
         {% endif %}
     <p>
         <ul>
             <li>Geräte-ID: {{id}}</li>
-            <li>Status: {{block.status}}</li>
+            <li>Geräte-Art: {{block.objectType}}</li>
+            <li>Status: {% if not block.status %}
+                In Gebrauch
+                {% else %} Verschrottet
+            {% endif %}</li>
             <li>Pfand: {{block.pfand}} €</li>
 
         </ul>
