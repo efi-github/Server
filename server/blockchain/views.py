@@ -10,26 +10,39 @@ from rest_framework.response import Response
 from .models import Block, Key
 from .serializers import BlockSerializer, KeySerializer
 from django.contrib.auth import authenticate, login, logout
+from rest_framework.renderers import JSONRenderer
 
 class BlockView(APIView):
     serializer_class = BlockSerializer
-
     #Validiert einen Block (Server)
     #Checkt mithilfe des Public Keys ob der Block richtig signiert wurde.
     def check(self, block, creator, hash):
         pubkey= rsa.PublicKey(int(creator.key), 65537)
         serializedBlock = BlockSerializer(block, many=False)
         try:
-            rsa.verify(str(serializedBlock.data).encode('utf8'), hash, pubkey)
+            b_string = JSONRenderer().render(serializedBlock.data)
+            rsa.verify(b_string, hash, pubkey)
         except:
-            raise Http404
+            return False #raise Http404("Verification failed, message :" + str(str(serializedBlock.data).encode('utf8')))
         return True
 
 
     #Liest ein Objekt aus (Jeder)
     #Get holt sich ein bestimmtes Objekt mit der gegebenen UUID.
     #Wenn die UUID==0 ist, dann wird das letzte Objekt ausgelesen.
-    def get(self, request, uuid):
+    def get(self, request, uuid=None):
+        if uuid is not None:
+            return self.get_uuid(request, uuid)
+        else:
+            return self.get_block(request)
+
+    def get_block(self, request):
+        new_id = uuid4()
+        data = {'prevhash': Block.objects.latest("id").hash, 'uuid4': str(new_id)}
+        body = json.dumps(data)
+        return Response(str(body).encode('utf8'), status=status.HTTP_200_OK)
+
+    def get_uuid(self, request, uuid):
         if uuid == "0":
             block = Block.objects.latest("id")
         else:
@@ -39,25 +52,26 @@ class BlockView(APIView):
                 raise Http404
         serializer = BlockSerializer(block, many=False)
         return Response(str(serializer.data).encode('utf8'), status=status.HTTP_200_OK)
-
     #Erstellt ein neues Objekt (Hersteller)
     #Post erstellt einen neuen Block mit einem neuen Objekt.
-    def post(self, request):
+
+    def commit_new_block(self, request):
         body = json.loads(request.body)
         if (not "creatorID" in body
-            or not "objectID" in body
             or not "objectType" in body
+            or not "objectID" in body
             or not "pfand" in body
             or not "hash" in body):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         try:
             creator = Key.objects.get(creatorID=body["creatorID"])
         except Key.DoesNotExist:
-            raise Http404
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         hash = bytes.fromhex(body["hash"])
+        #hash = bytes.fromhex("10e378fb32a9d6e77cff77153fdb9451dad9b061938479b43dc2ba9761d323da0faf91b8926f50e6b7e9a62b5df3d1d873904fff10d2cc077ddaa2d041a24c39")
         newBlock = Block(
             creatorID = body["creatorID"],
-            objectID = new_id,
+            objectID = body["objectID"],
             objectType = body['objectType'],
             pfand = body['pfand'],
             status = False,
@@ -66,16 +80,68 @@ class BlockView(APIView):
         if not ((creator.type == "Hersteller") and self.check(newBlock, creator, hash)):
             return Response(status=status.HTTP_409_CONFLICT)
         newBlock.save()
-        return Response(new_id, status=status.HTTP_200_OK)
+        return Response(JSONRenderer().render(BlockSerializer(newBlock, many=False).data), status=status.HTTP_200_OK)
 
-    #Verschrottet das Objekt (Verschrotter)
-    #Put erstellt einen neuen Block, in dem das Objekt 
-    #als verschrottet markiert und der Pfand auf 0 gesetzt wird.
-    def put(self, request):
+
+    def request_new_block(self, request):
+        body = json.loads(request.body)
+        if (not "creatorID" in body
+            or not "objectType" in body
+            or not "pfand" in body):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            creator = Key.objects.get(creatorID=body["creatorID"])
+        except Key.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        new_id = uuid4()
+        newBlock = Block(
+            creatorID = body["creatorID"],
+            objectID = new_id,
+            objectType = body['objectType'],
+            pfand = body['pfand'],
+            status = False,
+            prevhash = Block.objects.latest("id").hash,
+            hash = "lollls")
+        return Response(JSONRenderer().render(BlockSerializer(newBlock, many=False).data), status=status.HTTP_200_OK)
+
+
+    def post(self, request):
+        body = json.loads(request.body)
+        if("hash" in body):
+            if "recyclerID" in body:
+                return self.commit(request)
+            else:
+                return self.commit_new_block(request)
+        else:
+            if "recyclerID" in body:
+                return self.request_put(request)
+            else:
+                return self.request_new_block(request)
+
+    def request_put(self, request):
         body = json.loads(request.body)
         if (not "recyclerID" in body
-            or not "objectID" in body
-            or not "hash" in body):
+            or not "objectID" in body):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            block = Block.objects.get(objectID=body["objectID"])
+        except:
+            raise Http404
+        newBlock = Block(
+            creatorID = body["recyclerID"],
+            objectID = body["objectID"],
+            objectType = block.objectType,
+            pfand = '0',
+            status = True,
+            prevhash = Block.objects.latest("id").hash,
+            hash = "trolllololo")
+        return Response(JSONRenderer().render(BlockSerializer(newBlock, many=False).data), status=status.HTTP_200_OK)
+
+    def commit(self, request):
+        body = json.loads(request.body)
+        if (not "recyclerID" in body
+            or not "hash" in body
+            or not "objectID" in body):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         try:
             creator = Key.objects.get(creatorID= body["recyclerID"])
@@ -83,21 +149,34 @@ class BlockView(APIView):
             raise Http404
         hash = bytes.fromhex(body["hash"])
         try:
-            block = Block.objects.get(objectID=body["objectID"])
+            block = Block.objects.get(objectID=body["objectID"])#uuid)
         except:
             raise Http404
         newBlock = Block(
             creatorID = body["recyclerID"],
-            objectID = block.objectID,
+            objectID = body["objectID"],
             objectType = block.objectType,
             pfand = '0',
             status = True,
             prevhash = Block.objects.latest("id").hash,
             hash = body['hash'])
-        if not (creator.type == "Recycler" and not block.status and self.check(newBlock, creator, hash) ):
+        if not (self.check(newBlock, creator, hash)): #creator.type == "Recycler" and not block.status and
             return Response(status=status.HTTP_409_CONFLICT)
         newBlock.save()
-        return Response(status=status.HTTP_200_OK)
+        return Response(JSONRenderer().render(BlockSerializer(newBlock, many=False).data),status=status.HTTP_200_OK)
+
+    def put(self, request):
+        body = json.loads(request.body)
+        if "hash" in body:
+            return self.commit(request)
+        else:
+            return self.request_put(request)
+
+
+    #Verschrottet das Objekt (Verschrotter)
+    #Put erstellt einen neuen Block, in dem das Objekt
+    #als verschrottet markiert und der Pfand auf 0 gesetzt wird.
+
 
 class PfandWebsite(APIView):
     #Wenn man http://127.0.0.1:8000/pfandWebsite/ aufruft kommt man auf
@@ -118,7 +197,7 @@ class PfandWebsite(APIView):
                 'Pfand': Object.pfand+"€",
                 'Status':'Pfand gültig' if Object.status=='In Benutzung' else 'Pfand eingelößt'
                 }})
-        
+
 class RegistrierungWebsite(APIView):
     #Wenn man http://127.0.0.1:8000/registrierungWebsite/ aufruft kommt man auf
     #die Website zum registrieren neuer Objekte. Man muss hierbei sein

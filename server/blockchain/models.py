@@ -10,7 +10,7 @@ class Block(models.Model):
 	# False=nicht verschrottet, True=verschrottet
 	status = models.BooleanField()
 	prevhash = models.CharField(max_length=200)
-	hash = models.CharField(max_length=200)
+	hash = models.CharField(max_length=200, default="Na")
 
 #	def __str__(self):
 #		return str(BlockSerializer(self, many=False).data)
