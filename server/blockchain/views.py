@@ -1,4 +1,4 @@
-import json, rsa, csv
+import json, rsa, csv, hashlib
 from uuid import uuid4
 from django.http import Http404, HttpResponse, HttpRequest
 from django.db import models
@@ -18,7 +18,16 @@ class BlockView(APIView):
     #Checkt mithilfe des Public Keys ob der Block richtig signiert wurde.
     def check(self, block, creator, hash):
         pubkey= rsa.PublicKey(int(creator.key), 65537)
-        serializedBlock = BlockSerializer(block, many=False)
+        block_to_verify = Block(
+            creatorID = block.creatorID,
+            objectID = block.objectID,
+            objectType = block.objectType,
+            pfand = block.pfand,
+            status = True,
+            prevhash = Block.objects.latest("id").hash,
+            hash = "trolllololo"
+        )
+        serializedBlock = BlockSerializer(block_to_verify, many=False)
         try:
             b_string = JSONRenderer().render(serializedBlock.data)
             rsa.verify(b_string, hash, pubkey)
@@ -47,7 +56,7 @@ class BlockView(APIView):
             block = Block.objects.latest("id")
         else:
             try:
-                block = Block.objects.get(objectID=uuid)
+                block = Block.objects.filter(objectID=uuid).latest("id")
             except Block.DoesNotExist:
                 raise Http404
         serializer = BlockSerializer(block, many=False)
@@ -100,27 +109,31 @@ class BlockView(APIView):
             objectType = body['objectType'],
             pfand = body['pfand'],
             status = False,
-            prevhash = Block.objects.latest("id").hash,
-            hash = "lollls")
+            prevhash = Block.objects.latest("id").hash
+        )
+        unhashed_block = str(BlockSerializer(newBlock, many=False).data).encode('utf-8')
+        blockhash = hashlib.sha256(unhashed_block).hexdigest()
+        newBlock.hash = blockhash
+        newBlock.save()
         return Response(JSONRenderer().render(BlockSerializer(newBlock, many=False).data), status=status.HTTP_200_OK)
 
 
     def post(self, request):
         body = json.loads(request.body)
         if("hash" in body):
-            if "recyclerID" in body:
+            if "creatorID" in body:
                 return self.commit(request)
             else:
                 return self.commit_new_block(request)
         else:
-            if "recyclerID" in body:
+            if "creatorID" in body:
                 return self.request_put(request)
             else:
                 return self.request_new_block(request)
 
     def request_put(self, request):
         body = json.loads(request.body)
-        if (not "recyclerID" in body
+        if (not "creatorID" in body
             or not "objectID" in body):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         try:
@@ -128,7 +141,7 @@ class BlockView(APIView):
         except:
             raise Http404
         newBlock = Block(
-            creatorID = body["recyclerID"],
+            creatorID = body["creatorID"],
             objectID = body["objectID"],
             objectType = block.objectType,
             pfand = '0',
@@ -139,12 +152,12 @@ class BlockView(APIView):
 
     def commit(self, request):
         body = json.loads(request.body)
-        if (not "recyclerID" in body
+        if (not "creatorID" in body
             or not "hash" in body
             or not "objectID" in body):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         try:
-            creator = Key.objects.get(creatorID= body["recyclerID"])
+            creator = Key.objects.get(creatorID= body["creatorID"])
         except:
             raise Http404
         hash = bytes.fromhex(body["hash"])
@@ -153,7 +166,7 @@ class BlockView(APIView):
         except:
             raise Http404
         newBlock = Block(
-            creatorID = body["recyclerID"],
+            creatorID = body["creatorID"],
             objectID = body["objectID"],
             objectType = block.objectType,
             pfand = '0',

@@ -32,6 +32,7 @@ def get(url, json):
 
 def create_new_block(key, creatorID, objectType, pfand):
 	r = get("http://127.0.0.1:8000/block/0/", {})
+	j = r.json()
 	print(r.json())
 	signature = sign(r.json(), key)
 	dict = {"creatorID":creatorID, "objectType":objectType, "pfand":pfand, "prevhash": signature}
@@ -40,18 +41,20 @@ def create_new_block(key, creatorID, objectType, pfand):
 	return r
 
 if __name__ == "__main__":
-	print(sys.argv)
-	print(sys.argv[0])
-	print(sys.argv[1])
+	#print(sys.argv)
+	#print(sys.argv[0])
+	#print(sys.argv[1])
 
-	data = json.loads(sys.argv[1])
+	#data = json.loads(sys.argv[1])
+	data = json.loads('{"creatorID":"80e75ded-6793-4f29-bb90-c984bf8874b3","objectType":"Kaffeemaschine","pfand":"10"}')
 	print("data:\n"+ str(data))
 	key = standard_key
-	print(len(sys.argv))
-	if len(sys.argv) > 2:
-		keys = json.loads(sys.argv[2])
-		pubkey = rsa.PublicKey(keys["pubkey"], 65537)
-		privkey = rsa.PrivateKey(keys["pubkey"], 65537, keys["privkey"][0], keys["privkey"][1], keys["privkey"][2])
-		key = (pubkey, privkey)
+	# print(len(sys.argv))
+	# if len(sys.argv) > 2:
+	# 	keys = json.loads(sys.argv[2])
+	# 	pubkey = rsa.PublicKey(keys["pubkey"], 65537)
+	# 	privkey = rsa.PrivateKey(keys["pubkey"], 65537, keys["privkey"][0], keys["privkey"][1], keys["privkey"][2])
+	# 	key = (pubkey, privkey)
+	
 	r = create_new_block(key, data["creatorID"], data["objectType"], data["pfand"])
 	print(r)

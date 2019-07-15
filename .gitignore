@@ -195,3 +195,5 @@ dmypy.json
 
 
 *.pyc
+
+Server\.tar\.gz
